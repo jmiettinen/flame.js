@@ -127,6 +127,7 @@ Flame.LazyListView = Flame.ListView.extend({
                 this.viewForRow(i);
             }
         }
+        this._recycleViews();
     },
 
     /**
@@ -201,12 +202,25 @@ Flame.LazyListView = Flame.ListView.extend({
 
     /** Prepare a view to be recycled at a later point */
     _recycleView: function(view) {
-        view.set('isVisible', false);
         view.set('contentIndex', undefined);
         view.set('isSelected', false);
         var itemClass = view.get('content').constructor.toString();
         if (!this._recycledViews[itemClass]) this._recycledViews[itemClass] = [];
         this._recycledViews[itemClass].push(view);
+    },
+
+    _recycleViews: function() {
+        Ember.changeProperties(function() {
+            var views = this._recycledViews;
+            for (var key in views) {
+                if (views.hasOwnProperty(key)) {
+                    var viewArray = views[key];
+                    viewArray.forEach(function(view) {
+                        if (view.get("isVisible")) view.set("isVisible", false);
+                    });
+                }
+            }
+        }, this);
     },
 
     /** Select the view at index `index` */
